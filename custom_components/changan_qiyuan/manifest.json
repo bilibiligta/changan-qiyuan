@@ -1,0 +1,12 @@
+{
+  "domain": "changan_qiyuan",
+  "name": "长安启源",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://m.iov.changan.com.cn",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.8.9"
+}

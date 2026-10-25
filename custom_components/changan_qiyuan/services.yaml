@@ -1,0 +1,120 @@
+control:
+  name: 下发控车指令
+  description: >-
+    向长安启源云端下发一条控车指令。需要先通过 send_control_sms + authorize_control
+    完成一次短信码授权，否则服务端会返回 code:1004（账户安全，请输入校验码）。
+    授权是会话级的，之后可连续下发多条指令，不必每条都发短信。
+  fields:
+    cmd:
+      name: 指令码
+      description: >-
+        取值为 APK assets/control_config.json 中的 cmd，例如
+        UnLockDoor / LockDoor / OpenTrunk / CloseTrunk / OpenWindow / CloseWindow /
+        WindowSlit / OpenDormer / CloseDormer / SkyWindowLiftUp /
+        OpenEngine / CloseEngine / OpenFragrance / CloseFragrance /
+        unlockChargingGun / SteeringWheelHeating / SeatHeating /
+        musicLightShow / openUltraVioletLight / closeUltraVioletLight
+      required: true
+      example: UnLockDoor
+      selector:
+        text:
+    pin:
+      name: 控车码
+      description: 车辆的 6 位安全 PIN。留空则使用集成选项中保存的控车码（需已勾选保存）。
+      required: false
+      example: "123456"
+      selector:
+        text:
+          type: password
+    entry_id:
+      name: 配置条目 ID
+      description: 多车时指定，留空则使用第一个配置条目。
+      required: false
+      selector:
+        text:
+
+check_pin:
+  name: 校验控车码
+  description: >-
+    只做校验不下发指令，用于在真实控车前确认 PIN 与 RSA 加密链路是否可用。
+    正确返回 code:0 / data:true，错误返回 code:21。
+  fields:
+    pin:
+      name: 控车码
+      required: true
+      example: "123456"
+      selector:
+        text:
+          type: password
+    entry_id:
+      name: 配置条目 ID
+      required: false
+      selector:
+        text:
+
+refresh:
+  name: 立即刷新车况
+  description: 不等轮询周期，立刻拉一次车况。
+  fields:
+    entry_id:
+      name: 配置条目 ID
+      required: false
+      selector:
+        text:
+
+send_control_sms:
+  name: 发送控车校验短信
+  description: >-
+    1004 拦截的第一步：向注册手机号下发一条控车校验码（usage=carControl）。
+    收到 6 位码后调用 authorize_control。同一号码 1 分钟内重复请求会返回 code:40003。
+  fields:
+    mobile:
+      name: 手机号
+      description: 留空则使用配置条目里登录用的手机号。
+      required: false
+      example: "13800000000"
+      selector:
+        text:
+    entry_id:
+      name: 配置条目 ID
+      required: false
+      selector:
+        text:
+
+authorize_control:
+  name: 控车短信码授权
+  description: >-
+    用收到的 6 位短信码换取会话级控车授权（POST /app2/api/control/auth）。
+    成功后 execute 不再返回 1004；短信码一次性，用过或超时报 100511。
+  fields:
+    auth_code:
+      name: 短信校验码
+      required: true
+      example: "123456"
+      selector:
+        text:
+    entry_id:
+      name: 配置条目 ID
+      required: false
+      selector:
+        text:
+
+query_task:
+  name: 查询指令执行结果
+  description: >-
+    用 control 服务返回的 taskId 查车端真实结果（POST /app2/api/car/getControlInfo）。
+    execute 返回 code:0 只代表「已入队」；只有 handleStatus=Completed 且 handleCode=0
+    才是真的执行成功。不传 task_id 时使用最近一次下发的指令。
+  fields:
+    task_id:
+      name: 任务 ID
+      description: control 返回的 data.taskId，形如 <tuid>_<yyyyMMddHHmmss>_<ms>。留空用最近一条。
+      required: false
+      example: "33003001240129250000011398373768_20261024213130_476"
+      selector:
+        text:
+    entry_id:
+      name: 配置条目 ID
+      required: false
+      selector:
+        text:

@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "长安启源 · 登录",
+        "description": "输入车主手机号，提交后会向该号码发送短信验证码。",
+        "data": { "phone": "手机号" }
+      },
+      "code": {
+        "title": "短信验证码",
+        "description": "验证码已发送到 {phone}，请输入收到的 6 位数字。",
+        "data": { "verify_code": "验证码" }
+      },
+      "pin": {
+        "title": "控车码（可选）",
+        "description": "控车码即 App 里的 6 位「安全码」，下发控车指令时必须带上。留空则安装后只能读车况，之后可以在「配置 → 选项」里补填。",
+        "data": {
+          "pin": "控车码（6 位）",
+          "store_pin": "保存控车码（明文保存在 HA 配置中）",
+          "enable_control": "创建控车实体"
+        }
+      },
+      "reauth_confirm": {
+        "title": "重新登录",
+        "description": "登录态已失效，请重新输入手机号接收验证码。",
+        "data": { "phone": "手机号" }
+      }
+    },
+    "error": {
+      "cannot_connect": "连不上长安服务器，请检查网络或稍后重试",
+      "invalid_auth": "验证码错误或已过期，请重新获取",
+      "invalid_pin": "控车码校验失败"
+    },
+    "abort": {
+      "reauth_successful": "重新登录成功"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "长安启源 · 设置",
+        "description": "控车指令必须带控车码；服务端还会要求一次短信授权，可用服务 changan_qiyuan.send_control_sms 收码、changan_qiyuan.authorize_control 授权（授权有效期实测可达数小时）。",
+        "data": {
+          "scan_interval": "车况刷新间隔（分钟）",
+          "control_endpoint": "控车接口版本",
+          "store_pin": "保存控车码",
+          "pin": "控车码（6 位，留空＝不发控车指令）",
+          "enable_control": "启用控车实体"
+        }
+      }
+    }
+  }
+}

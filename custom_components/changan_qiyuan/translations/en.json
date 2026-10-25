@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Changan Qiyuan · Sign in",
+        "description": "Enter the owner phone number. An SMS verification code will be sent.",
+        "data": { "phone": "Phone number" }
+      },
+      "code": {
+        "title": "SMS code",
+        "description": "A code was sent to {phone}. Enter the 6-digit code.",
+        "data": { "verify_code": "Verification code" }
+      },
+      "pin": {
+        "title": "Control PIN (optional)",
+        "description": "The control PIN is the 6-digit security code used by the official app; it is required to send control commands. Leave empty to start read-only - you can add it later under Configure -> Options.",
+        "data": {
+          "pin": "Control PIN (6 digits)",
+          "store_pin": "Store the PIN (plain text in HA config)",
+          "enable_control": "Create control entities"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "The login session expired. Please verify your phone number again.",
+        "data": { "phone": "Phone number" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Changan server",
+      "invalid_auth": "Invalid or expired verification code",
+      "invalid_pin": "Control PIN rejected"
+    },
+    "abort": {
+      "reauth_successful": "Re-authentication succeeded"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Changan Qiyuan · Options",
+        "description": "Control commands require the PIN. The cloud also requires a one-off SMS authorisation: call services changan_qiyuan.send_control_sms then changan_qiyuan.authorize_control (authorisation lasts hours in our tests).",
+        "data": {
+          "scan_interval": "Poll interval (minutes)",
+          "control_endpoint": "Control endpoint version",
+          "store_pin": "Store control PIN",
+          "pin": "Control PIN (6 digits, empty = read-only)",
+          "enable_control": "Enable control entities"
+        }
+      }
+    }
+  }
+}

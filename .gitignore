@@ -1,5 +1,6 @@
-﻿# 不提交本地产物
-__pycache__/
+﻿__pycache__/
 *.pyc
 .DS_Store
 venv/
+*.log
+.storage/

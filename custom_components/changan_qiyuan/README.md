@@ -1,4 +1,4 @@
-# 长安启源 A07 —— Home Assistant 集成 v0.1.0
+﻿# 长安启源 A07 —— Home Assistant 集成 v0.1.0
 
 > 反向工程自官方 App `com.changan.oushangCos1` 4.0.2（启源）的云端 REST 网关。
 > 车辆：启源 A07，`seriesCode=C236ICA1`、`confCode=SC7007AABBEV.CNH4001+00004`、`protocolType=TLV`。
@@ -258,13 +258,13 @@ data: {}
 # 第二步：拿短信码换授权（授权后长时间有效，失效时 HA 会弹持久通知提醒）
 service: changan_qiyuan.authorize_control
 data:
-  auth_code: "438001"
+  auth_code: "123456"
 
 # 第三步：正常下指令（每条都会自动取新 vc 并 RSA 加密 PIN）
 service: changan_qiyuan.control
 data:
   cmd: OpenWindow          # 车窗留缝；CloseWindow 关窗
-  pin: "242290"            # 可省略：省略时用选项中保存的控车码
+  pin: "123456"            # 可省略：省略时用选项中保存的控车码
 ```
 
 ```yaml

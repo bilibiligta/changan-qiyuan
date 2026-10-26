@@ -1,7 +1,7 @@
 ﻿# 长安启源 A07 —— Home Assistant 集成 v0.1.0
 
 > 反向工程自官方 App `com.changan.oushangCos1` 4.0.2（启源）的云端 REST 网关。
-> 车辆：启源 A07，`seriesCode=C236ICA1`、`confCode=SC7007AABBEV.CNH4001+00004`、`protocolType=TLV`。
+> 车辆：启源 A07（`protocolType=TLV`）。
 > 网关：`https://m.iov.changan.com.cn`，请求头 `vcs-app-id: qiyuan`。
 
 ---

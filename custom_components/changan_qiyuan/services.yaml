@@ -110,7 +110,7 @@ query_task:
       name: 任务 ID
       description: control 返回的 data.taskId，形如 <tuid>_<yyyyMMddHHmmss>_<ms>。留空用最近一条。
       required: false
-      example: "33003001240129250000011398373768_20261024213130_476"
+      example: "33003001240129250000000000000000_20260101080000_000"
       selector:
         text:
     entry_id:

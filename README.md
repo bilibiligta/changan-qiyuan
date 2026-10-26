@@ -71,13 +71,13 @@
 命名规则：`<域>.qi_yuan_a07_<车架号后6位>_<中文名>`，例如：
 
 ```text
-sensor.qi_yuan_a07_20c97d_sheng_yu_dian_liang      剩余电量
-sensor.qi_yuan_a07_20c97d_sheng_yu_xu_hang         剩余续航
-climate.qi_yuan_a07_20c97d_kong_diao               空调
-lock.qi_yuan_a07_20c97d_che_men_suo                车门锁
-cover.qi_yuan_a07_20c97d_hou_bei_xiang             后备箱
-switch.qi_yuan_a07_20c97d_shao_bing_mo_shi         哨兵模式
-select.qi_yuan_a07_20c97d_zhu_jia_zuo_yi_jia_re    主驾座椅加热
+sensor.qi_yuan_a07_abc123_sheng_yu_dian_liang      剩余电量
+sensor.qi_yuan_a07_abc123_sheng_yu_xu_hang         剩余续航
+climate.qi_yuan_a07_abc123_kong_diao               空调
+lock.qi_yuan_a07_abc123_che_men_suo                车门锁
+cover.qi_yuan_a07_abc123_hou_bei_xiang             后备箱
+switch.qi_yuan_a07_abc123_shao_bing_mo_shi         哨兵模式
+select.qi_yuan_a07_abc123_zhu_jia_zuo_yi_jia_re    主驾座椅加热
 ```
 
 ### 服务
@@ -98,13 +98,13 @@ automation:
   - alias: 电量低于 30% 提醒插枪
     trigger:
       - platform: numeric_state
-        entity_id: sensor.qi_yuan_a07_20c97d_sheng_yu_dian_liang
+        entity_id: sensor.qi_yuan_a07_abc123_sheng_yu_dian_liang
         below: 30
     action:
       - service: notify.mobile_app_你的手机
         data:
           message: >-
-            电量只剩 {{ states('sensor.qi_yuan_a07_20c97d_sheng_yu_dian_liang') }}%，
+            电量只剩 {{ states('sensor.qi_yuan_a07_abc123_sheng_yu_dian_liang') }}%，
             记得插枪
 ```
 

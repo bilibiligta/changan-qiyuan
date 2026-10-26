@@ -1,7 +1,7 @@
 """长安启源 (Changan Qiyuan) 集成常量定义.
 
 本文件里的「指令码表」来自 APK 内 assets/control_config.json（明文，无需脱壳），
-已在 启源 A07（seriesCode=C236ICA1 / confCode=SC7007AABBEV.CNH4001+00004）上核对过
+已在 启源 A07 上核对过
 车辆功能开关，具体见同目录 README.md 的「指令码 × 车辆开关」交叉表。
 """
 from __future__ import annotations
@@ -46,7 +46,7 @@ CONF_CONTROL_ENDPOINT = "control_endpoint"
 BASE_URL = "https://m.iov.changan.com.cn"
 VCS_APP_ID = "qiyuan"              # 启源 App 的 appId，长安/深蓝/阿维塔各不相同
 USER_AGENT = (
-    "Mozilla/5.0 (Linux; Android 14; M2102K1C Build/UKQ1.240624.001; wv) "
+    "Mozilla/5.0 (Linux; Android 14; PJD110 Build/UKQ1.231003.002; wv) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 "
     "Mobile Safari/537.36"
 )
@@ -213,7 +213,7 @@ BUTTON_CMDS = (
 # ------------------------------------------------------------------ 车辆能力开关
 # 来源：GET /app2/api/v3/car/detail 的 data.json（30 个分组，键名就是 App 里那些 # 开关键）。
 # 只有值为 1 的功能，App 才会显示入口，车端也才认——据此过滤按钮，避免出现按了必失败的空实体。
-# 2026-10-24 本车（启源 A07 / C236ICA1）实测：control/remoteBaseControl 组里
+# 2026-10-24 启源 A07 实测：control/remoteBaseControl 组里
 #   #seatBtn=1 #trunkBtn=1 #WindowSeamsBtn=1 #doorBtn=1 #lockCar=1(blueKeyControl) #searchCar=1
 #   #windowBtn=0 #dormerBtn=0 #engineBtn=0 #Fragrance=0 #uvgi=0 #SteeringWheelHeat=0
 #   #MusicLightShow=0 #chargeLock=0 #airBtn=0（空调走速冷/速热，OpenAir 已实测可用）

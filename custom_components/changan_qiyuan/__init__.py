@@ -47,7 +47,7 @@ from .coordinator import ChanganCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[str] = ["sensor", "binary_sensor"]
-CONTROL_PLATFORMS: list[str] = ["climate", "switch", "select", "lock", "cover"]
+CONTROL_PLATFORMS: list[str] = ["climate", "switch", "select", "lock", "cover", "button"]
 
 SERVICE_CONTROL = "control"
 SERVICE_CHECK_PIN = "check_pin"

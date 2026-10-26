@@ -126,7 +126,8 @@ class ChanganSentrySwitch(CoordinatorEntity[ChanganCoordinator], SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        # 只有回读 3（站岗中）才算开启；1/4 是“已设置但未站岗”，显示为开会让用户以为生效了。
+        # 1/3/4 都算“哨兵开着”：3=站岗中，1/4=已布防但车端还没确认站岗
+        # （下发后 10~40 秒、或车在睡眠导致云端快照没刷新时会停在 1）。
         return self._state in SENTRY_ON_VALUES
 
     @property
@@ -137,8 +138,8 @@ class ChanganSentrySwitch(CoordinatorEntity[ChanganCoordinator], SwitchEntity):
             "哨兵状态": {
                 3: "站岗中",
                 0: "关闭",
-                1: "已设置但未开启",
-                4: "已设置但未开启",
+                1: "已开启（待站岗确认）",
+                4: "已开启（待站岗确认）",
                 2: "低电量预开启",
             }.get(raw_state, "未知"),
             "灵敏度": {0: "低", 1: "中", 2: "高"}.get(
@@ -147,7 +148,7 @@ class ChanganSentrySwitch(CoordinatorEntity[ChanganCoordinator], SwitchEntity):
             ),
             "状态原始值": raw_state,
             "是否站岗": raw_state == 3,
-            "已设置未站岗": raw_state in SENTRY_PENDING_VALUES,
+            "已布防待站岗": raw_state in SENTRY_PENDING_VALUES,
         }
         attrs.update(self.coordinator.timeline_text())
         return attrs

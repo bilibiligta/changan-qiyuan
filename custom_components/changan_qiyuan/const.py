@@ -271,8 +271,12 @@ SENTRY_PARAM_SWITCH = "sendSentryModeSwitchSts"
 SENTRY_PARAM_SENSITIVITY = "sendSentryModeSensitivity"
 KEY_SENTRY_STATE = "sentryModeSwitchSts"
 KEY_SENTRY_SENSITIVITY = "SentryModeSensitivity"
-SENTRY_ON_VALUES = (3,)          # 只有 3=站岗中 才算真的开启
-SENTRY_PENDING_VALUES = (1, 4)   # 1/4=已设置但未站岗（车端条件不满足，不能显示为开）
+# 2026-10-26 修正：3=站岗中；1/4=已布防但车端尚未宣告“站岗中”（下发后 10~40 秒内、车在睡眠、
+# 或云端快照未刷新时会长期停在 1）。对用户而言 1/4 与 3 都是“哨兵开着”，所以两者都算开启，
+# 差别只体现在属性「哨兵状态 / 是否站岗」上。
+SENTRY_ON_VALUES = (1, 3, 4)
+SENTRY_ARMED_VALUES = (1, 4)     # 已布防、待站岗确认
+SENTRY_PENDING_VALUES = (1, 4)   # 兼容旧代码的别名
 SENTRY_OFF_VALUES = (0, 2)
 SENTRY_SENSITIVITY_LEVELS = (1, 2)   # 实测 1→2 生效；3 下发后回读仍为 2，暂不暴露
 # 2026-10-25 实测：sendSentryModeSensitivity 是 0 基（0/1/2 = 低/中/高），回读同值。

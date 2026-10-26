@@ -37,7 +37,7 @@ async def async_setup_entry(
     if skipped:
         _LOGGER.info("本车不支持，跳过按钮：%s", ", ".join(skipped))
     if not cmds:
-        _LOGGER.warning("功能开关表里没有任何可控功能，跳过创建按钮")
+        _LOGGER.debug("本车功能开关表无额外可控按钮（「立即刷新车况」按钮已创建）")
         return
     async_add_entities(ChanganControlButton(coordinator, entry, cmd) for cmd in cmds)
 

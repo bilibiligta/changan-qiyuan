@@ -28,6 +28,14 @@ DOMAIN = "changan_qiyuan"
 # ------------------------------------------------------------------ 轮询
 DEFAULT_SCAN_INTERVAL = 1          # 分钟（指令下发后另有 3 秒级快速回读）
 MIN_SCAN_INTERVAL = 1              # 分钟
+
+# 云端车况快照的「陈旧」判定与抢救（实测 2026-10-27：每次 car/data 都会真实唤醒
+# T-BOX 并返回 5 秒内的新快照；车端深度休眠时会连续几十分钟原样返回旧快照，
+# 表现为 lastUpdatedTime 不前进，而请求本身是成功的）。
+STALE_AFTER_MINUTES = 15           # 快照超过这么久没前进 → 判定为陈旧
+STALE_RETRY_COUNT = 3              # 陈旧时额外「冲刺」唤醒的次数
+STALE_RETRY_INTERVAL = 20          # 冲刺间隔（秒）
+POLL_RETRY_DELAY = 5               # 单次轮询网络失败后立即重试前的等待（秒）
 # 车端字段异常值上界：超过即视为 T-BOX 上报无效（例如 totalOdometer 饱和到 2^24 × 0.1km = 1677721.6km），
 # 直接显示会严重误导，实体置为未知。
 SANITY_MAX: dict[str, float] = {"totalOdometer": 500000.0}

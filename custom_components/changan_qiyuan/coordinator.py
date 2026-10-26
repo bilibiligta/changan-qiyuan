@@ -17,6 +17,10 @@ from .const import (
     DEFAULT_CONTROL_ENDPOINT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    POLL_RETRY_DELAY,
+    STALE_AFTER_MINUTES,
+    STALE_RETRY_COUNT,
+    STALE_RETRY_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +68,7 @@ class ChanganCoordinator(DataUpdateCoordinator[dict]):
         self.control_endpoint = control_endpoint
         self.entry = entry
         self._persist_token = persist_token
+        self.scan_interval = scan_interval
         self.location: dict = {}
         self._loc_at: float = 0.0
         self.car_detail: dict = {}
@@ -79,6 +84,12 @@ class ChanganCoordinator(DataUpdateCoordinator[dict]):
         self._quick_mode_hooks: list = []
         # 速冷/速热两个开关实例，用于互斥时互相取「进入前状态」
         self.quick_switches: dict = {}
+        # --- 车况新鲜度（云端快照时间随每次 car/data 前进，车端休眠时会卡住）---
+        self._snapshot_at: datetime | None = None
+        self.data_age_min: float | None = None
+        self.stale: bool = False
+        self.stale_retries: int = 0
+        self.last_poll_error: str | None = None
 
     async def async_try_refresh_token(self) -> bool:
         """access token 过期时用 refresh token 续期；成功则写回配置条目。"""
@@ -107,6 +118,80 @@ class ChanganCoordinator(DataUpdateCoordinator[dict]):
         _LOGGER.info("长安启源 token 已自动续期")
         return True
 
+    @staticmethod
+    def _snapshot_dt(value) -> datetime | None:
+        """把云端 lastUpdatedTime（本地时间、无时区、带毫秒）转成 datetime。"""
+        if not value:
+            return None
+        text = str(value).strip().replace("T", " ").replace("Z", "").split("+")[0]
+        for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(text.strip(), fmt)
+            except ValueError:
+                continue
+        return None
+
+    async def _fetch_car_data(self) -> dict:
+        """取车况；网络抖动时立刻补一次，避免整轮直接被判失败。"""
+        try:
+            return await self.api.car_data()
+        except ChanganConnectionError as err:
+            _LOGGER.debug("取车况失败，%s 秒后重试一次：%s", POLL_RETRY_DELAY, err)
+            await asyncio.sleep(POLL_RETRY_DELAY)
+            return await self.api.car_data()
+
+    async def _async_ensure_fresh(self, data: dict) -> dict:
+        """快照没前进时额外冲刺几次，尝试把休眠的车端重新唤醒。
+
+        实测（2026-10-27）：正常情况下每次 car/data 都会真实唤醒 T-BOX，
+        lastUpdatedTime 就是「刚刚」；车端深度休眠时云端会连着几十分钟原样
+        返回旧快照（请求仍然 code:0），表现为面板上数据不动。
+        """
+        stamp = self._snapshot_dt(data.get("lastUpdatedTime"))
+        prev = self._snapshot_at
+        self.stale_retries = 0
+        tries = 0
+        while (
+            stamp is not None
+            and prev is not None
+            and stamp <= prev
+            and tries < STALE_RETRY_COUNT
+        ):
+            tries += 1
+            self.stale_retries = tries
+            _LOGGER.info(
+                "车况快照停在 %s 未前进，第 %s/%s 次冲刺唤醒",
+                stamp.strftime("%m-%d %H:%M:%S"), tries, STALE_RETRY_COUNT,
+            )
+            await asyncio.sleep(STALE_RETRY_INTERVAL)
+            try:
+                fresh = await self._fetch_car_data()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("冲刺唤醒失败：%s", err)
+                break
+            if not fresh:
+                continue
+            new_stamp = self._snapshot_dt(fresh.get("lastUpdatedTime"))
+            data = fresh
+            if new_stamp is not None and new_stamp > stamp:
+                stamp = new_stamp
+                break
+
+        self._snapshot_at = stamp
+        if stamp is not None:
+            self.data_age_min = round((datetime.now() - stamp).total_seconds() / 60, 1)
+        else:
+            self.data_age_min = None
+        self.stale = bool(
+            self.data_age_min is not None and self.data_age_min >= STALE_AFTER_MINUTES
+        )
+        if self.stale and stamp is not None:
+            _LOGGER.warning(
+                "车况已 %s 分钟未刷新（快照停在 %s），冲刺 %s 次仍未唤醒车辆",
+                self.data_age_min, stamp.strftime("%m-%d %H:%M:%S"), self.stale_retries,
+            )
+        return data
+
     async def _async_update_data(self) -> dict:
         # 主动续期：access token 只有 1 小时，提前 60s 换新，避免整轮失败
         if self.api.needs_refresh:
@@ -115,12 +200,12 @@ class ChanganCoordinator(DataUpdateCoordinator[dict]):
         try:
             if not self.car_detail:
                 self.car_detail = await self.api.car_detail()
-            data = await self.api.car_data()
+            data = await self._fetch_car_data()
         except ChanganAuthError as err:
             # 先尝试自动续期（access token 只有 1 小时），失败才让用户重新登录
             if await self.async_try_refresh_token():
                 try:
-                    data = await self.api.car_data()
+                    data = await self._fetch_car_data()
                 except ChanganAuthError as err2:
                     raise ConfigEntryAuthFailed(
                         f"认证失败，需要重新登录: {err2}") from err2
@@ -128,12 +213,17 @@ class ChanganCoordinator(DataUpdateCoordinator[dict]):
                 # 触发 HA 的重新认证流程（config_flow.async_step_reauth）
                 raise ConfigEntryAuthFailed(f"认证失败，需要重新登录: {err}") from err
         except ChanganConnectionError as err:
+            self.last_poll_error = f"网络异常: {err}"
             raise UpdateFailed(f"网络异常: {err}") from err
         except Exception as err:  # noqa: BLE001
+            self.last_poll_error = f"未知错误: {err}"
             raise UpdateFailed(f"未知错误: {err}") from err
 
         if not data:
             raise UpdateFailed("车况为空（车辆可能离线，或 token 已过期）")
+        self.last_poll_error = None
+
+        data = await self._async_ensure_fresh(data)
 
         data["_fetched_at"] = datetime.now().isoformat(timespec="seconds")
         await self._async_update_location()

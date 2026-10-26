@@ -86,6 +86,22 @@ class ChanganSensor(_Base, SensorEntity):
             return None
         return value
 
+    @property
+    def extra_state_attributes(self):
+        """「车况更新时间」额外暴露新鲜度，方便判断是不是云端给了旧快照。"""
+        if self.desc.key != "lastUpdatedTime":
+            return None
+        coord = self.coordinator
+        attrs = {
+            "数据龄期(分钟)": coord.data_age_min,
+            "数据陈旧": coord.stale,
+            "冲刺唤醒次数": coord.stale_retries,
+            "轮询间隔(分钟)": coord.scan_interval,
+        }
+        if coord.last_poll_error:
+            attrs["上次轮询错误"] = coord.last_poll_error
+        return attrs
+
 
 class ChanganRawSensor(_Base, SensorEntity):
     """原始枚举值。语义未标定，用于对照采样；标完语义后去填 const.BINARY_ON_VALUES。"""
